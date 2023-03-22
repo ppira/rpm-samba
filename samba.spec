@@ -209,8 +209,7 @@ Summary:        Server and Client software to interoperate with Windows machines
 License:        GPL-3.0-or-later AND LGPL-3.0-or-later
 URL:            https://www.samba.org
 
-# This is a xz recompressed file of https://ftp.samba.org/pub/samba/samba-%%{version}%%{pre_release}.tar.gz
-Source0:        https://ftp.samba.org/pub/samba/samba-%{version}%{pre_release}.tar.gz#/samba-%{version}%{pre_release}.tar.xz
+Source0:        https://ftp.samba.org/pub/samba/samba-%{version}%{pre_release}.tar.gz
 Source1:        https://ftp.samba.org/pub/samba/samba-%{version}%{pre_release}.tar.asc
 Source2:        samba-pubkey_AA99442FB680B620.gpg
 
@@ -318,7 +317,7 @@ BuildRequires: libtasn1-devel
 # We need asn1Parser
 BuildRequires: libtasn1-tools
 BuildRequires: xfsprogs-devel
-BuildRequires: xz
+BuildRequires: gzip
 BuildRequires: zlib-devel >= 1.2.3
 
 BuildRequires: pkgconfig(libsystemd)
@@ -1192,9 +1191,9 @@ Support for using an existing CEPH cluster as a mutex helper for CTDB
 
 %prep
 %if 0%{?fedora} || 0%{?rhel} >= 9
-xzcat %{SOURCE0} | %{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data=-
+zcat %{SOURCE0} | %{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data=-
 %else
-xzcat %{SOURCE0} | gpgv2 --quiet --keyring %{SOURCE2} %{SOURCE1} -
+zcat %{SOURCE0} | gpgv2 --quiet --keyring %{SOURCE2} %{SOURCE1} -
 %endif
 %autosetup -n samba-%{version}%{pre_release} -p1
 
