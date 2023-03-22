@@ -442,7 +442,6 @@ Requires: %{name}-common-libs = %{samba_depver}
 %if %{with libwbclient}
 Requires: libwbclient = %{samba_depver}
 %endif
-Requires: krb5-libs >= %{required_mit_krb5}
 # This is needed for charset conversion
 Requires: glibc-gconv-extra
 
