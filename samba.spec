@@ -844,11 +844,13 @@ Requires: %{name}-libs = %{samba_depver}
 Requires: %{name}-dc-libs = %{samba_depver}
 Requires: python3-cryptography
 Requires: python3-dns
-Requires: python3-ldb
 Requires: python3-requests
+%if %{without includelibs}
+Requires: python3-ldb
 Requires: python3-talloc
 Requires: python3-tdb
 Requires: python3-tevent
+%endif
 %if %{with libsmbclient}
 Requires: libsmbclient = %{samba_depver}
 %endif
