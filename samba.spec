@@ -130,7 +130,7 @@
 
 %define samba_requires_eq()  %(LC_ALL="C" echo '%*' | xargs -r rpm -q --qf 'Requires: %%{name} = %%{epoch}:%%{version}\\n' | sed -e 's/ (none):/ /' -e 's/ 0:/ /' | grep -v "is not")
 
-%global samba_version 4.18.6
+%global samba_version 4.19.0
 %global baserelease 1
 # This should be rc1 or %%nil
 %global pre_release %nil
@@ -1660,6 +1660,7 @@ fi
 %doc examples/printer-accounting examples/printing
 %doc packaging/README.downgrade
 %{_bindir}/smbstatus
+%{_bindir}/samba-log-parser
 %{_sbindir}/eventlogadm
 %{_sbindir}/nmbd
 %{_sbindir}/smbd
@@ -1731,6 +1732,7 @@ fi
 %config %{_sysconfdir}/openldap/schema/samba.schema
 %config(noreplace) %{_sysconfdir}/pam.d/samba
 %{_mandir}/man1/smbstatus.1*
+%{_mandir}/man1/samba-log-parser.1*
 %{_mandir}/man8/eventlogadm.8*
 %{_mandir}/man8/samba-bgqd.8*
 %{_mandir}/man8/smbd.8*
@@ -1821,7 +1823,6 @@ fi
 %{_mandir}/man1/smbclient.1*
 %{_mandir}/man1/smbcquotas.1*
 %{_mandir}/man1/smbget.1*
-%{_mandir}/man5/smbgetrc.5*
 %{_mandir}/man1/smbtar.1*
 %{_mandir}/man1/smbtree.1*
 %{_mandir}/man7/traffic_learner.7.*
@@ -1878,11 +1879,13 @@ fi
 %{_libdir}/samba/libCHARSET3-samba4.so
 %{_libdir}/samba/libMESSAGING-SEND-samba4.so
 %{_libdir}/samba/libMESSAGING-samba4.so
+%{_libdir}/samba/libad-claims-samba4.so
 %{_libdir}/samba/libaddns-samba4.so
 %{_libdir}/samba/libads-samba4.so
 %{_libdir}/samba/libasn1util-samba4.so
 %{_libdir}/samba/libauth-samba4.so
 %{_libdir}/samba/libauthkrb5-samba4.so
+%{_libdir}/samba/libauthn-policy-util-samba4.so
 %{_libdir}/samba/libcli-cldap-samba4.so
 %{_libdir}/samba/libcli-ldap-common-samba4.so
 %{_libdir}/samba/libcli-ldap-samba4.so
@@ -2482,6 +2485,7 @@ fi
 %{python3_sitearch}/samba/__pycache__/descriptor.*.pyc
 %{python3_sitearch}/samba/__pycache__/dnsresolver.*.pyc
 %{python3_sitearch}/samba/__pycache__/drs_utils.*.pyc
+%{python3_sitearch}/samba/__pycache__/functional_level.*.pyc
 %{python3_sitearch}/samba/__pycache__/getopt.*.pyc
 %{python3_sitearch}/samba/__pycache__/graph.*.pyc
 %{python3_sitearch}/samba/__pycache__/hostconfig.*.pyc
@@ -2493,6 +2497,7 @@ fi
 %{python3_sitearch}/samba/__pycache__/ms_schema.*.pyc
 %{python3_sitearch}/samba/__pycache__/ndr.*.pyc
 %{python3_sitearch}/samba/__pycache__/ntacls.*.pyc
+%{python3_sitearch}/samba/__pycache__/policies.*.pyc
 %{python3_sitearch}/samba/__pycache__/safe_tarfile.*.pyc
 %{python3_sitearch}/samba/__pycache__/sd_utils.*.pyc
 %{python3_sitearch}/samba/__pycache__/sites.*.pyc
@@ -2565,6 +2570,7 @@ fi
 %{python3_sitearch}/samba/gensec.*.so
 %{python3_sitearch}/samba/getopt.py
 %{python3_sitearch}/samba/graph.py
+%{python3_sitearch}/samba/functional_level.py
 %{python3_sitearch}/samba/hostconfig.py
 %{python3_sitearch}/samba/idmap.py
 %{python3_sitearch}/samba/join.py
@@ -2584,6 +2590,7 @@ fi
 %{python3_sitearch}/samba/emulate/traffic_packets.py
 %dir %{python3_sitearch}/samba/gp
 %dir %{python3_sitearch}/samba/gp/__pycache__
+%{python3_sitearch}/samba/gp/__pycache__/__init__.*.pyc
 %{python3_sitearch}/samba/gp/__pycache__/gpclass.*.pyc
 %{python3_sitearch}/samba/gp/__pycache__/gp_centrify_crontab_ext.*.pyc
 %{python3_sitearch}/samba/gp/__pycache__/gp_centrify_sudoers_ext.*.pyc
@@ -2606,6 +2613,7 @@ fi
 %{python3_sitearch}/samba/gp/__pycache__/vgp_startup_scripts_ext.*.pyc
 %{python3_sitearch}/samba/gp/__pycache__/vgp_sudoers_ext.*.pyc
 %{python3_sitearch}/samba/gp/__pycache__/vgp_symlink_ext.*.pyc
+%{python3_sitearch}/samba/gp/__init__.py
 %{python3_sitearch}/samba/gp/gpclass.py
 %{python3_sitearch}/samba/gp/gp_gnome_settings_ext.py
 %{python3_sitearch}/samba/gp/gp_scripts_ext.py
@@ -2662,12 +2670,12 @@ fi
 %{python3_sitearch}/samba/netcmd/__pycache__/dbcheck.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/delegation.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/dns.*.pyc
-%{python3_sitearch}/samba/netcmd/__pycache__/domain.*.pyc
-%{python3_sitearch}/samba/netcmd/__pycache__/domain_backup.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/drs.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/dsacl.*.pyc
+%{python3_sitearch}/samba/netcmd/__pycache__/encoders.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/forest.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/fsmo.*.pyc
+%{python3_sitearch}/samba/netcmd/__pycache__/gpcommon.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/gpo.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/group.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/ldapcmp.*.pyc
@@ -2683,19 +2691,138 @@ fi
 %{python3_sitearch}/samba/netcmd/__pycache__/spn.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/testparm.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/user.*.pyc
+%{python3_sitearch}/samba/netcmd/__pycache__/validators.*.pyc
 %{python3_sitearch}/samba/netcmd/__pycache__/visualize.*.pyc
+%{python3_sitearch}/samba/netcmd/domain/__init__.py
+%dir %{python3_sitearch}/samba/netcmd/domain/__pycache__
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/__init__.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/__init__.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/backup.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/backup.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/classicupgrade.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/classicupgrade.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/common.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/common.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/dcpromo.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/dcpromo.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/demote.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/demote.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/functional_prep.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/functional_prep.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/info.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/info.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/join.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/join.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/keytab.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/keytab.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/leave.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/leave.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/level.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/level.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/passwordsettings.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/passwordsettings.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/provision.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/provision.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/samba3upgrade.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/samba3upgrade.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/schemaupgrade.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/schemaupgrade.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/tombstones.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/tombstones.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/trust.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/__pycache__/trust.cpython-39.pyc
+%dir %{python3_sitearch}/samba/netcmd/domain/auth
+%dir %{python3_sitearch}/samba/netcmd/domain/auth/__pycache__
+%{python3_sitearch}/samba/netcmd/domain/auth/__init__.py
+%{python3_sitearch}/samba/netcmd/domain/auth/__pycache__/__init__.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/auth/__pycache__/__init__.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/auth/__pycache__/policy.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/auth/__pycache__/policy.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/auth/__pycache__/silo.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/auth/__pycache__/silo.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/auth/__pycache__/silo_member.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/auth/__pycache__/silo_member.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/auth/policy.py
+%{python3_sitearch}/samba/netcmd/domain/auth/silo.py
+%{python3_sitearch}/samba/netcmd/domain/auth/silo_member.py
+%{python3_sitearch}/samba/netcmd/domain/backup.py
+%dir %{python3_sitearch}/samba/netcmd/domain/claim
+%{python3_sitearch}/samba/netcmd/domain/claim/__init__.py
+%dir %{python3_sitearch}/samba/netcmd/domain/claim/__pycache__
+%{python3_sitearch}/samba/netcmd/domain/claim/__pycache__/__init__.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/claim/__pycache__/__init__.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/claim/__pycache__/claim_type.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/claim/__pycache__/claim_type.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/claim/__pycache__/value_type.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/claim/__pycache__/value_type.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/claim/claim_type.py
+%{python3_sitearch}/samba/netcmd/domain/claim/value_type.py
+%{python3_sitearch}/samba/netcmd/domain/classicupgrade.py
+%{python3_sitearch}/samba/netcmd/domain/common.py
+%{python3_sitearch}/samba/netcmd/domain/dcpromo.py
+%{python3_sitearch}/samba/netcmd/domain/demote.py
+%{python3_sitearch}/samba/netcmd/domain/functional_prep.py
+%{python3_sitearch}/samba/netcmd/domain/info.py
+%{python3_sitearch}/samba/netcmd/domain/join.py
+%{python3_sitearch}/samba/netcmd/domain/keytab.py
+%{python3_sitearch}/samba/netcmd/domain/leave.py
+%{python3_sitearch}/samba/netcmd/domain/level.py
+%dir %{python3_sitearch}/samba/netcmd/domain/models
+%{python3_sitearch}/samba/netcmd/domain/models/__init__.py
+%dir %{python3_sitearch}/samba/netcmd/domain/models/__pycache__
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/__init__.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/__init__.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/auth_policy.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/auth_policy.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/auth_silo.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/auth_silo.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/claim_type.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/claim_type.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/exceptions.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/exceptions.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/fields.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/fields.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/model.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/model.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/schema.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/schema.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/site.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/site.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/subnet.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/subnet.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/user.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/user.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/value_type.cpython-39.opt-1.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/__pycache__/value_type.cpython-39.pyc
+%{python3_sitearch}/samba/netcmd/domain/models/auth_policy.py
+%{python3_sitearch}/samba/netcmd/domain/models/auth_silo.py
+%{python3_sitearch}/samba/netcmd/domain/models/claim_type.py
+%{python3_sitearch}/samba/netcmd/domain/models/exceptions.py
+%{python3_sitearch}/samba/netcmd/domain/models/fields.py
+%{python3_sitearch}/samba/netcmd/domain/models/model.py
+%{python3_sitearch}/samba/netcmd/domain/models/schema.py
+%{python3_sitearch}/samba/netcmd/domain/models/site.py
+%{python3_sitearch}/samba/netcmd/domain/models/subnet.py
+%{python3_sitearch}/samba/netcmd/domain/models/user.py
+%{python3_sitearch}/samba/netcmd/domain/models/value_type.py
+%{python3_sitearch}/samba/netcmd/domain/passwordsettings.py
+%{python3_sitearch}/samba/netcmd/domain/provision.py
+%{python3_sitearch}/samba/netcmd/domain/samba3upgrade.py
+%{python3_sitearch}/samba/netcmd/domain/schemaupgrade.py
+%{python3_sitearch}/samba/netcmd/domain/tombstones.py
+%{python3_sitearch}/samba/netcmd/domain/trust.py
 %{python3_sitearch}/samba/netcmd/common.py
 %{python3_sitearch}/samba/netcmd/computer.py
 %{python3_sitearch}/samba/netcmd/contact.py
 %{python3_sitearch}/samba/netcmd/dbcheck.py
 %{python3_sitearch}/samba/netcmd/delegation.py
 %{python3_sitearch}/samba/netcmd/dns.py
-%{python3_sitearch}/samba/netcmd/domain.py
-%{python3_sitearch}/samba/netcmd/domain_backup.py
 %{python3_sitearch}/samba/netcmd/drs.py
 %{python3_sitearch}/samba/netcmd/dsacl.py
+%{python3_sitearch}/samba/netcmd/encoders.py
 %{python3_sitearch}/samba/netcmd/forest.py
 %{python3_sitearch}/samba/netcmd/fsmo.py
+%{python3_sitearch}/samba/netcmd/gpcommon.py
 %{python3_sitearch}/samba/netcmd/gpo.py
 %{python3_sitearch}/samba/netcmd/group.py
 %{python3_sitearch}/samba/netcmd/ldapcmp.py
@@ -2711,9 +2838,11 @@ fi
 %{python3_sitearch}/samba/netcmd/spn.py
 %{python3_sitearch}/samba/netcmd/testparm.py
 %{python3_sitearch}/samba/netcmd/user.py
+%{python3_sitearch}/samba/netcmd/validators.py
 %{python3_sitearch}/samba/netcmd/visualize.py
 %{python3_sitearch}/samba/ntacls.py
 %{python3_sitearch}/samba/param.*.so
+%{python3_sitearch}/samba/policies.py
 %{python3_sitearch}/samba/policy.*.so
 %{python3_sitearch}/samba/registry.*.so
 %{python3_sitearch}/samba/reparse_symlink.*.so
@@ -2890,6 +3019,7 @@ fi
 %{python3_sitearch}/samba/tests/__pycache__/ldap_referrals.*.pyc
 %{python3_sitearch}/samba/tests/__pycache__/ldap_spn.*.pyc
 %{python3_sitearch}/samba/tests/__pycache__/ldap_upn_sam_account.*.pyc
+%{python3_sitearch}/samba/tests/__pycache__/ldap_whoami.*.pyc
 %{python3_sitearch}/samba/tests/__pycache__/loadparm.*.pyc
 %{python3_sitearch}/samba/tests/__pycache__/logfiles.*.pyc
 %{python3_sitearch}/samba/tests/__pycache__/libsmb.*.pyc
@@ -2936,6 +3066,7 @@ fi
 %{python3_sitearch}/samba/tests/__pycache__/s3windb.*.pyc
 %{python3_sitearch}/samba/tests/__pycache__/s3_net_join.*.pyc
 %{python3_sitearch}/samba/tests/__pycache__/safe_tarfile.*.pyc
+%{python3_sitearch}/samba/tests/__pycache__/samba_startup_fl_change.*.pyc
 %{python3_sitearch}/samba/tests/__pycache__/samba_upgradedns_lmdb.*.pyc
 %{python3_sitearch}/samba/tests/__pycache__/samba3sam.*.pyc
 %{python3_sitearch}/samba/tests/__pycache__/samdb.*.pyc
@@ -3119,8 +3250,11 @@ fi
 %{python3_sitearch}/samba/tests/krb5/__pycache__/alias_tests.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/as_canonicalization_tests.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/as_req_tests.*.pyc
+%{python3_sitearch}/samba/tests/krb5/__pycache__/authn_policy_tests.*.pyc
+%{python3_sitearch}/samba/tests/krb5/__pycache__/claims_in_pac.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/claims_tests.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/compatability_tests.*.pyc
+%{python3_sitearch}/samba/tests/krb5/__pycache__/device_tests.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/etype_tests.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/fast_tests.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/group_tests.*.pyc
@@ -3133,6 +3267,7 @@ fi
 %{python3_sitearch}/samba/tests/krb5/__pycache__/ms_kile_client_principal_lookup_tests.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/nt_hash_tests.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/pac_align_tests.*.pyc
+%{python3_sitearch}/samba/tests/krb5/__pycache__/pkinit_tests.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/protected_users_tests.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/raw_testcase.*.pyc
 %{python3_sitearch}/samba/tests/krb5/__pycache__/rfc4120_constants.*.pyc
@@ -3152,8 +3287,11 @@ fi
 %{python3_sitearch}/samba/tests/krb5/alias_tests.py
 %{python3_sitearch}/samba/tests/krb5/as_canonicalization_tests.py
 %{python3_sitearch}/samba/tests/krb5/as_req_tests.py
+%{python3_sitearch}/samba/tests/krb5/authn_policy_tests.py
+%{python3_sitearch}/samba/tests/krb5/claims_in_pac.py
 %{python3_sitearch}/samba/tests/krb5/claims_tests.py
 %{python3_sitearch}/samba/tests/krb5/compatability_tests.py
+%{python3_sitearch}/samba/tests/krb5/device_tests.py
 %{python3_sitearch}/samba/tests/krb5/etype_tests.py
 %{python3_sitearch}/samba/tests/krb5/fast_tests.py
 %{python3_sitearch}/samba/tests/krb5/group_tests.py
@@ -3166,6 +3304,7 @@ fi
 %{python3_sitearch}/samba/tests/krb5/ms_kile_client_principal_lookup_tests.py
 %{python3_sitearch}/samba/tests/krb5/nt_hash_tests.py
 %{python3_sitearch}/samba/tests/krb5/pac_align_tests.py
+%{python3_sitearch}/samba/tests/krb5/pkinit_tests.py
 %{python3_sitearch}/samba/tests/krb5/protected_users_tests.py
 %{python3_sitearch}/samba/tests/krb5/raw_testcase.py
 %{python3_sitearch}/samba/tests/krb5/rfc4120_constants.py
@@ -3187,6 +3326,7 @@ fi
 %{python3_sitearch}/samba/tests/ldap_spn.py
 %{python3_sitearch}/samba/tests/ldap_referrals.py
 %{python3_sitearch}/samba/tests/ldap_upn_sam_account.py
+%{python3_sitearch}/samba/tests/ldap_whoami.py
 %{python3_sitearch}/samba/tests/libsmb.py
 %{python3_sitearch}/samba/tests/libsmb-basic.py
 %{python3_sitearch}/samba/tests/loadparm.py
@@ -3234,6 +3374,7 @@ fi
 %{python3_sitearch}/samba/tests/s3_net_join.py
 %{python3_sitearch}/samba/tests/safe_tarfile.py
 %{python3_sitearch}/samba/tests/samba3sam.py
+%{python3_sitearch}/samba/tests/samba_startup_fl_change.py
 %{python3_sitearch}/samba/tests/samba_upgradedns_lmdb.py
 %dir %{python3_sitearch}/samba/tests/samba_tool
 %{python3_sitearch}/samba/tests/samba_tool/__init__.py
@@ -3244,6 +3385,11 @@ fi
 %{python3_sitearch}/samba/tests/samba_tool/__pycache__/contact.*.pyc
 %{python3_sitearch}/samba/tests/samba_tool/__pycache__/demote.*.pyc
 %{python3_sitearch}/samba/tests/samba_tool/__pycache__/dnscmd.*.pyc
+%{python3_sitearch}/samba/tests/samba_tool/__pycache__/domain_auth_base.*.pyc
+%{python3_sitearch}/samba/tests/samba_tool/__pycache__/domain_auth_policy.*.pyc
+%{python3_sitearch}/samba/tests/samba_tool/__pycache__/domain_auth_silo.*.pyc
+%{python3_sitearch}/samba/tests/samba_tool/__pycache__/domain_claim.*.pyc
+%{python3_sitearch}/samba/tests/samba_tool/__pycache__/domain_models.*.pyc
 %{python3_sitearch}/samba/tests/samba_tool/__pycache__/drs_clone_dc_data_lmdb_size.*.pyc
 %{python3_sitearch}/samba/tests/samba_tool/__pycache__/dsacl.*.pyc
 %{python3_sitearch}/samba/tests/samba_tool/__pycache__/forest.*.pyc
@@ -3281,6 +3427,11 @@ fi
 %{python3_sitearch}/samba/tests/samba_tool/contact.py
 %{python3_sitearch}/samba/tests/samba_tool/demote.py
 %{python3_sitearch}/samba/tests/samba_tool/dnscmd.py
+%{python3_sitearch}/samba/tests/samba_tool/domain_auth_base.py
+%{python3_sitearch}/samba/tests/samba_tool/domain_auth_policy.py
+%{python3_sitearch}/samba/tests/samba_tool/domain_auth_silo.py
+%{python3_sitearch}/samba/tests/samba_tool/domain_claim.py
+%{python3_sitearch}/samba/tests/samba_tool/domain_models.py
 %{python3_sitearch}/samba/tests/samba_tool/drs_clone_dc_data_lmdb_size.py
 %{python3_sitearch}/samba/tests/samba_tool/dsacl.py
 %{python3_sitearch}/samba/tests/samba_tool/forest.py
