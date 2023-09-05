@@ -4488,6 +4488,9 @@ fi
 %endif
 
 %changelog
+* Fri Sep 7 2023 Patrik Pira <papira@flutter.se> - 4.19.0-1
+- Update to version 4.19.0
+
 * Fri Mar 17 2023 Kalev Lember <klember@redhat.com> - 4.18.0-10
 - Move libstable-sort-samba4.so to samba-client-libs subpackage
 
