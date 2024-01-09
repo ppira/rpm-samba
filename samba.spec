@@ -2069,7 +2069,6 @@ fi
 %{_libexecdir}/samba/rpcd_fsrvp
 %{_libexecdir}/samba/rpcd_lsad
 %{_libexecdir}/samba/rpcd_mdssvc
-%{_libexecdir}/samba/rpcd_rpcecho
 %{_libexecdir}/samba/rpcd_spoolss
 %{_libexecdir}/samba/rpcd_winreg
 %{_mandir}/man8/samba-dcerpcd.8*
