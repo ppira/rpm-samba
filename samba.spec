@@ -1666,7 +1666,7 @@ fi
 %{_sbindir}/smbd
 %if %{with dc} || %{with testsuite}
 # This is only used by vfs_dfs_samba4
-%{_libdir}/samba/libdfs-server-ad-samba4.so
+#%{_libdir}/samba/libdfs-server-ad-samba4.so
 %endif
 %dir %{_libdir}/samba/auth
 %{_libdir}/samba/auth/unix.so
